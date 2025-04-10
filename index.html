@@ -6,110 +6,59 @@
     <title>TimeCaps</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f5f0e8;
-            color: #333;
-        }
-        .capsule-type-btn.active {
-            background-color: #fef3c7;
-            border-color: #d4a76a;
-        }
-    </style>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
 </head>
-<body class="min-h-screen flex items-center justify-center">
-    <div class="container mx-auto px-4 py-6 max-w-md">
-        <header class="flex justify-between items-center mb-6">
-            <div class="flex items-center">
-                <div class="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center mr-2 shadow-md">
-                    <i class="fas fa-hourglass-half text-white text-lg"></i>
-                </div>
-                <h1 class="text-xl font-bold text-amber-800">TimeCaps</h1>
-            </div>
-            <div class="flex items-center bg-amber-100 px-2 py-1 rounded-full">
-                <i class="fas fa-key text-amber-600 mr-1"></i>
-                <span class="font-medium text-amber-800" id="timeKeys">15</span>
-            </div>
-        </header>
-
-        <div class="bg-white rounded-xl p-6 shadow-sm">
-            <h2 class="text-xl font-bold text-amber-800 mb-4">Create Time Capsule</h2>
-
-            <div class="mb-4">
-                <label class="block text-amber-800 font-medium mb-2">Capsule Title</label>
-                <input type="text" id="capsuleTitle" placeholder="e.g. Message to My Future Self" class="w-full px-4 py-3 border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-300">
-            </div>
-
-            <div class="mb-4">
-                <label class="block text-amber-800 font-medium mb-2">Description</label>
-                <textarea id="capsuleDescription" rows="3" placeholder="What's inside your capsule?" class="w-full px-4 py-3 border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-300"></textarea>
-            </div>
-
-            <div class="mb-4">
-                <label class="block text-amber-800 font-medium mb-2">Unlock Date</label>
-                <input type="date" id="unlockDate" class="w-full px-4 py-3 border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-300">
-            </div>
-
-            <div class="mb-4">
-                <label class="block text-amber-800 font-medium mb-2">Capsule Type</label>
-                <div class="grid grid-cols-2 gap-3">
-                    <button id="privateBtn" class="capsule-type-btn active bg-amber-50 border-2 border-amber-200 rounded-lg p-3 flex flex-col items-center">
-                        <div class="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center mb-1">
-                            <i class="fas fa-lock text-amber-600"></i>
-                        </div>
-                        <span class="font-medium text-amber-800">Private</span>
-                    </button>
-                    <button id="publicBtn" class="capsule-type-btn bg-white border-2 border-gray-200 rounded-lg p-3 flex flex-col items-center">
-                        <div class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mb-1">
-                            <i class="fas fa-globe text-gray-600"></i>
-                        </div>
-                        <span class="font-medium text-gray-800">Public</span>
-                    </button>
-                </div>
-            </div>
-
-            <button id="sealButton" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-3 px-6 rounded-full shadow-md transition duration-300 flex items-center justify-center">
-                <i class="fas fa-time-capsule mr-2"></i> Seal Time Capsule
-            </button>
-
-            <p id="result" class="mt-4 text-center text-amber-600"></p>
-        </div>
+<body class="min-h-screen flex items-center justify-center bg-amber-50">
+    <div class="bg-white p-6 rounded-lg shadow-md max-w-md w-full">
+        <h1 class="text-xl font-bold text-amber-800 mb-4">Create Time Capsule</h1>
+        <input id="capsuleTitle" class="w-full p-2 mb-4 border rounded" placeholder="Capsule Title">
+        <textarea id="capsuleDescription" class="w-full p-2 mb-4 border rounded" placeholder="Description"></textarea>
+        <input id="unlockDate" type="date" class="w-full p-2 mb-4 border rounded">
+        <button id="sealButton" class="w-full bg-amber-500 text-white p-2 rounded">Seal Capsule</button>
+        <p id="result" class="mt-4 text-center"></p>
     </div>
-
     <script>
-        let capsuleType = 'private';
+        // Твой Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyAFFEMu2sm9XDJgGUrX4wUG3TPZ9UiwjzU",
+            authDomain: "timecaps-8f759.firebaseapp.com",
+            projectId: "timecaps-8f759",
+            storageBucket: "timecaps-8f759.firebasestorage.app",
+            messagingSenderId: "777140343852",
+            appId: "1:777140343852:web:c6701944e99c0d0bcfad89"
+        };
 
-        document.getElementById('privateBtn').addEventListener('click', function() {
-            capsuleType = 'private';
-            this.classList.add('active', 'bg-amber-50', 'border-amber-200');
-            document.getElementById('publicBtn').classList.remove('active', 'bg-amber-50', 'border-amber-200');
-            document.getElementById('publicBtn').classList.add('bg-white', 'border-gray-200');
-        });
-
-        document.getElementById('publicBtn').addEventListener('click', function() {
-            capsuleType = 'public';
-            this.classList.add('active', 'bg-amber-50', 'border-amber-200');
-            document.getElementById('privateBtn').classList.remove('active', 'bg-amber-50', 'border-amber-200');
-            document.getElementById('privateBtn').classList.add('bg-white', 'border-gray-200');
-        });
+        // Инициализация Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
         document.getElementById('sealButton').addEventListener('click', function() {
             const title = document.getElementById('capsuleTitle').value;
             const description = document.getElementById('capsuleDescription').value;
             const unlockDate = document.getElementById('unlockDate').value;
+            const user = window.Telegram.WebApp.initDataUnsafe.user || { id: 'testUser' };
 
             if (title && description && unlockDate) {
-                const user = window.Telegram.WebApp.initDataUnsafe.user || { id: 'testUser' };
-                document.getElementById('result').innerText = `Capsule "${title}" sealed! Opens on ${unlockDate}.`;
-                window.Telegram.WebApp.showAlert('Capsule created successfully!');
-                // Здесь будет сохранение в Firebase
+                db.collection('capsules').add({
+                    title: title,
+                    description: description,
+                    unlockDate: unlockDate,
+                    userId: user.id,
+                    createdAt: new Date().toISOString()
+                }).then(() => {
+                    document.getElementById('result').innerText = `Capsule "${title}" sealed! Opens on ${unlockDate}.`;
+                    window.Telegram.WebApp.showAlert('Capsule created!');
+                }).catch(error => {
+                    window.Telegram.WebApp.showAlert('Error: ' + error.message);
+                });
             } else {
-                window.Telegram.WebApp.showAlert('Please fill in all fields!');
+                window.Telegram.WebApp.showAlert('Fill all fields!');
             }
         });
 
+        window.Telegram.WebApp.expand();
         window.Telegram.WebApp.ready();
     </script>
 </body>
