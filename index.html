@@ -178,70 +178,76 @@
     </div>
 
     <script>
-        // Firebase Config
-        const firebaseConfig = {
-            apiKey: "AIzaSyAFFEMu2sm9XDJgGUrX4wUG3TPZ9UiwjzU",
-            authDomain: "timecaps-8f759.firebaseapp.com",
-            projectId: "timecaps-8f759",
-            storageBucket: "timecaps-8f759.firebasestorage.app",
-            messagingSenderId: "777140343852",
-            appId: "1:777140343852:web:c6701944e99c0d0bcfad89"
-        };
+    // Firebase Config
+    const firebaseConfig = {
+        apiKey: "AIzaSyAFFEMu2sm9XDJgGUrX4wUG3TPZ9UiwjzU",
+        authDomain: "timecaps-8f759.firebaseapp.com",
+        projectId: "timecaps-8f759",
+        storageBucket: "timecaps-8f759.firebasestorage.app",
+        messagingSenderId: "777140343852",
+        appId: "1:777140343852:web:c6701944e99c0d0bcfad89"
+    };
 
-        // Инициализация Firebase
+    // Инициализация Firebase
+    try {
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        window.Telegram.WebApp.showAlert('Firebase initialized successfully');
+    } catch (error) {
+        window.Telegram.WebApp.showAlert('Firebase init error: ' + error.message);
+    }
+    const db = firebase.firestore();
 
-        // Навигация
-        function showPage(pageId) {
-            document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'));
-            document.getElementById(pageId).classList.remove('hidden');
-            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-            event.currentTarget.classList.add('active');
+    // Навигация
+    function showPage(pageId) {
+        document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'));
+        document.getElementById(pageId).classList.remove('hidden');
+        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+    }
+
+    // Логика создания капсулы
+    let capsuleType = 'private';
+    document.getElementById('privateBtn').addEventListener('click', function() {
+        capsuleType = 'private';
+        this.classList.add('active', 'bg-amber-50', 'border-amber-200');
+        document.getElementById('publicBtn').classList.remove('active', 'bg-amber-50', 'border-amber-200');
+        document.getElementById('publicBtn').classList.add('bg-white', 'border-gray-200');
+    });
+    document.getElementById('publicBtn').addEventListener('click', function() {
+        capsuleType = 'public';
+        this.classList.add('active', 'bg-amber-50', 'border-amber-200');
+        document.getElementById('privateBtn').classList.remove('active', 'bg-amber-50', 'border-amber-200');
+        document.getElementById('privateBtn').classList.add('bg-white', 'border-gray-200');
+    });
+
+    document.getElementById('sealButton').addEventListener('click', function() {
+        const title = document.getElementById('capsuleTitle').value;
+        const description = document.getElementById('capsuleDescription').value;
+        const unlockDate = document.getElementById('unlockDate').value;
+        const user = window.Telegram.WebApp.initDataUnsafe.user || { id: 'testUser' };
+
+        if (!title || !description || !unlockDate) {
+            window.Telegram.WebApp.showAlert('Please fill in all fields!');
+            return;
         }
 
-        // Логика создания капсулы
-        let capsuleType = 'private';
-        document.getElementById('privateBtn').addEventListener('click', function() {
-            capsuleType = 'private';
-            this.classList.add('active', 'bg-amber-50', 'border-amber-200');
-            document.getElementById('publicBtn').classList.remove('active', 'bg-amber-50', 'border-amber-200');
-            document.getElementById('publicBtn').classList.add('bg-white', 'border-gray-200');
+        db.collection('capsules').add({
+            title: title,
+            description: description,
+            unlockDate: unlockDate,
+            userId: user.id,
+            type: capsuleType,
+            createdAt: new Date().toISOString()
+        }).then(() => {
+            document.getElementById('result').innerText = `Capsule "${title}" sealed! Opens on ${unlockDate}.`;
+            window.Telegram.WebApp.showAlert('Capsule created and saved!');
+        }).catch(error => {
+            window.Telegram.WebApp.showAlert('Save error: ' + error.message);
         });
-        document.getElementById('publicBtn').addEventListener('click', function() {
-            capsuleType = 'public';
-            this.classList.add('active', 'bg-amber-50', 'border-amber-200');
-            document.getElementById('privateBtn').classList.remove('active', 'bg-amber-50', 'border-amber-200');
-            document.getElementById('privateBtn').classList.add('bg-white', 'border-gray-200');
-        });
+    });
 
-        document.getElementById('sealButton').addEventListener('click', function() {
-            const title = document.getElementById('capsuleTitle').value;
-            const description = document.getElementById('capsuleDescription').value;
-            const unlockDate = document.getElementById('unlockDate').value;
-            const user = window.Telegram.WebApp.initDataUnsafe.user || { id: 'testUser' };
-
-            if (title && description && unlockDate) {
-                db.collection('capsules').add({
-                    title: title,
-                    description: description,
-                    unlockDate: unlockDate,
-                    userId: user.id,
-                    type: capsuleType,
-                    createdAt: new Date().toISOString()
-                }).then(() => {
-                    document.getElementById('result').innerText = `Capsule "${title}" sealed! Opens on ${unlockDate}.`;
-                    window.Telegram.WebApp.showAlert('Capsule created!');
-                }).catch(error => {
-                    window.Telegram.WebApp.showAlert('Error: ' + error.message);
-                });
-            } else {
-                window.Telegram.WebApp.showAlert('Please fill in all fields!');
-            }
-        });
-
-        window.Telegram.WebApp.expand();
-        window.Telegram.WebApp.ready();
-    </script>
+    window.Telegram.WebApp.expand();
+    window.Telegram.WebApp.ready();
+</script>
 </body>
 </html>
